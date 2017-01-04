@@ -62,18 +62,20 @@
 	
 	var _root2 = _interopRequireDefault(_root);
 	
+	var _todo_actions = __webpack_require__(202);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	// import allTodos from './reducers/selectors';
-	
-	
 	var store = _store2.default; //TODO remember to remove when done
+	
+	// import allTodos from './reducers/selectors';
 	window.store = store;
 	
 	// window.selectors = allTodos(store.getState());
 	
 	document.addEventListener('DOMContentLoaded', function () {
-	  var rootElement = document.getElementById('root');
+	  window.fetchTodos = _todo_actions.fetchTodos;
+	  var rootElement = document.getElementById('content');
 	  _reactDom2.default.render(_react2.default.createElement(_root2.default, { store: store }), rootElement);
 	});
 
@@ -21506,9 +21508,13 @@
 	
 	var _root_reducer2 = _interopRequireDefault(_root_reducer);
 	
+	var _thunk = __webpack_require__(314);
+	
+	var _thunk2 = _interopRequireDefault(_thunk);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	var configureStore = (0, _redux.createStore)(_root_reducer2.default);
+	var configureStore = (0, _redux.createStore)(_root_reducer2.default, (0, _redux.applyMiddleware)(_thunk2.default));
 	
 	exports.default = configureStore;
 
@@ -22645,13 +22651,21 @@
 
 /***/ },
 /* 202 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	exports.updateTodo = exports.deleteTodo = exports.createTodo = exports.fetchTodos = exports.removeTodo = exports.receiveTodo = exports.receiveTodos = exports.REMOVE_TODO = exports.RECEIVE_TODO = exports.RECEIVE_TODOS = undefined;
+	
+	var _todo_api_util = __webpack_require__(313);
+	
+	var APIUtil = _interopRequireWildcard(_todo_api_util);
+	
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	
 	var RECEIVE_TODOS = exports.RECEIVE_TODOS = "RECEIVE_TODOS";
 	var RECEIVE_TODO = exports.RECEIVE_TODO = "RECEIVE_TODO";
 	var REMOVE_TODO = exports.REMOVE_TODO = "REMOVE_TODO";
@@ -22674,6 +22688,40 @@
 	  return {
 	    type: REMOVE_TODO,
 	    todo: todo
+	  };
+	};
+	
+	var fetchTodos = exports.fetchTodos = function fetchTodos() {
+	  return function (dispatch) {
+	    return APIUtil.fetchTodos().then(function (todos) {
+	      return dispatch(receiveTodos(todos));
+	    });
+	  };
+	};
+	
+	var createTodo = exports.createTodo = function createTodo(newtodo) {
+	  return function (dispatch) {
+	    return APIUtil.createTodo(newtodo).then(function (todo) {
+	      return dispatch(receiveTodo(todo));
+	    });
+	  };
+	};
+	
+	var deleteTodo = exports.deleteTodo = function deleteTodo(oldtodo) {
+	  return function (dispatch) {
+	    return APIUtil.deleteTodo(oldtodo).then(function (todo) {
+	      return dispatch(removeTodo(todo));
+	    });
+	  };
+	};
+	
+	var updateTodo = exports.updateTodo = function updateTodo(todo) {
+	  return function (dispatch) {
+	    console.log(todo);
+	    return APIUtil.updateTodo(todo).then(function (updatedtodo) {
+	      console.log(updatedtodo);
+	      return dispatch(receiveTodo(updatedtodo));
+	    });
 	  };
 	};
 	
@@ -26639,11 +26687,17 @@
 	
 	var mapDispatchToProps = function mapDispatchToProps(dispatch) {
 	  return {
-	    receiveTodo: function receiveTodo(todo) {
+	    createTodo: function createTodo(todo) {
+	      return dispatch((0, _todo_actions.createTodo)(todo));
+	    },
+	    updateTodo: function updateTodo(todo) {
 	      return dispatch((0, _todo_actions.receiveTodo)(todo));
 	    },
-	    removeTodo: function removeTodo(todo) {
-	      return dispatch((0, _todo_actions.removeTodo)(todo));
+	    deleteTodo: function deleteTodo(todo) {
+	      return dispatch((0, _todo_actions.deleteTodo)(todo));
+	    },
+	    fetchTodos: function fetchTodos(todos) {
+	      return dispatch((0, _todo_actions.fetchTodos)(todos));
 	    }
 	  };
 	};
@@ -26692,6 +26746,11 @@
 	  }
 	
 	  _createClass(TodoList, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.props.fetchTodos();
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      var _this2 = this;
@@ -26701,8 +26760,8 @@
 	        return _react2.default.createElement(_todo_list_item2.default, {
 	          key: todo.id,
 	          todo: todo,
-	          removeTodo: _this2.props.removeTodo,
-	          receiveTodo: _this2.props.receiveTodo
+	          deleteTodo: _this2.props.deleteTodo,
+	          updateTodo: _this2.props.updateTodo
 	        });
 	      });
 	
@@ -26714,7 +26773,7 @@
 	          null,
 	          items
 	        ),
-	        _react2.default.createElement(_todo_form2.default, { receiveTodo: this.props.receiveTodo })
+	        _react2.default.createElement(_todo_form2.default, { createTodo: this.props.createTodo })
 	      );
 	    }
 	  }]);
@@ -26775,7 +26834,7 @@
 	    key: 'removeTodoItem',
 	    value: function removeTodoItem(e) {
 	      e.preventDefault();
-	      this.props.removeTodo(this.props.todo);
+	      this.props.deleteTodo(this.props.todo);
 	    }
 	  }, {
 	    key: 'todoListStatus',
@@ -26790,9 +26849,15 @@
 	    key: 'flipTodoListStatus',
 	    value: function flipTodoListStatus(e) {
 	      e.preventDefault();
+	      console.log("button pressed" + this.props.todo.done);
 	      var newDoneStatus = !this.props.todo.done;
 	      var updatedTodo = (0, _merge2.default)({}, this.props.todo, { done: newDoneStatus });
-	      this.props.receiveTodo(updatedTodo);
+	      // this.setState({done: newDoneStatus});
+	      console.log("button pressed2" + updatedTodo.done);
+	      //
+	      console.log(this.props.updateTodo);
+	      this.props.updateTodo(updatedTodo);
+	      console.log("button pressed3" + this.props.todo.done);
 	    }
 	  }, {
 	    key: 'render',
@@ -26870,28 +26935,25 @@
 	    key: 'submitTodo',
 	    value: function submitTodo(e) {
 	      e.preventDefault();
-	      console.log("submitted");
 	
 	      var newTodo = {
-	        id: (0, _unique_id2.default)(),
 	        title: this.state.title,
-	        body: this.state.body,
-	        done: false
+	        body: this.state.body
 	      };
+	      // id: uniqueId(),
+	      // done: false
 	
-	      this.props.receiveTodo(newTodo);
+	      this.props.createTodo(newTodo);
 	      this.setState({ title: "", body: "" });
 	    }
 	  }, {
 	    key: 'updateTitle',
 	    value: function updateTitle(e) {
-	      console.log(e.target.value);
 	      this.setState({ title: e.target.value });
 	    }
 	  }, {
 	    key: 'updateBody',
 	    value: function updateBody(e) {
-	      console.log(e.target.value);
 	      this.setState({ body: e.target.value });
 	    }
 	  }, {
@@ -26970,6 +27032,70 @@
 	};
 	
 	exports.default = allTodos;
+
+/***/ },
+/* 313 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var fetchTodos = exports.fetchTodos = function fetchTodos() {
+	  return $.ajax({
+	    method: 'GET',
+	    url: 'api/todos'
+	
+	  });
+	};
+	
+	var createTodo = exports.createTodo = function createTodo(todo) {
+	  return $.ajax({
+	    method: 'POST',
+	    url: 'api/todos',
+	    data: { todo: todo }
+	  });
+	};
+	
+	var deleteTodo = exports.deleteTodo = function deleteTodo(todo) {
+	  return $.ajax({
+	    method: 'DELETE',
+	    url: 'api/todos/' + todo.id
+	  });
+	};
+	
+	var updateTodo = exports.updateTodo = function updateTodo(todo) {
+	  return $.ajax({
+	    method: 'PATCH',
+	    url: 'api/todos/' + todo.id,
+	    data: { todo: todo }
+	  });
+	};
+
+/***/ },
+/* 314 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var thunkMiddleware = function thunkMiddleware(_ref) {
+	  var dispatch = _ref.dispatch,
+	      getState = _ref.getState;
+	  return function (next) {
+	    return function (action) {
+	      if (typeof action === 'function') {
+	        return action(dispatch, getState);
+	      }
+	      return next(action);
+	    };
+	  };
+	};
+	
+	exports.default = thunkMiddleware;
 
 /***/ }
 /******/ ]);

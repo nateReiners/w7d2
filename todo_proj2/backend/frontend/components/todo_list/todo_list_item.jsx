@@ -16,7 +16,7 @@ class TodoListItem extends React.Component {
 
   removeTodoItem(e) {
     e.preventDefault();
-    this.props.removeTodo(this.props.todo);
+    this.props.deleteTodo(this.props.todo);
   }
 
   todoListStatus() {
@@ -29,9 +29,16 @@ class TodoListItem extends React.Component {
 
   flipTodoListStatus(e) {
     e.preventDefault();
+    console.log("button pressed" + this.props.todo.done);
     let newDoneStatus = !this.props.todo.done;
     const updatedTodo = merge({}, this.props.todo, {done: newDoneStatus});
-    this.props.receiveTodo(updatedTodo);
+    // this.setState({done: newDoneStatus});
+    console.log("button pressed2" + updatedTodo.done);
+    //
+    console.log(this.props.updateTodo);
+    this.props.updateTodo(updatedTodo);
+    console.log("button pressed3" + this.props.todo.done);
+
   }
 
 

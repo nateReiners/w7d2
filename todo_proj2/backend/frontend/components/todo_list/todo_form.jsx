@@ -13,26 +13,23 @@ class TodoForm extends React.Component {
 
   submitTodo(e) {
     e.preventDefault();
-    console.log("submitted");
 
     const newTodo = {
-      id: uniqueId(),
       title: this.state.title,
       body: this.state.body,
-      done: false
     };
+    // id: uniqueId(),
+    // done: false
 
-    this.props.receiveTodo(newTodo);
+    this.props.createTodo(newTodo);
     this.setState({title: "", body: ""});
   }
 
   updateTitle(e) {
-    console.log(e.target.value);
     this.setState({title: e.target.value});
   }
 
   updateBody(e) {
-    console.log(e.target.value);
     this.setState({body: e.target.value});
   }
 
